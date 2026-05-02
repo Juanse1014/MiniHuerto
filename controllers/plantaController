@@ -1,0 +1,69 @@
+const Planta = require('../models/Planta');
+
+// GET: Obtener todas las plantas
+exports.obtenerPlantas = async (req, res) => {
+    try {
+        const plantas = await Planta.find();
+        res.json(plantas);
+    } catch (error) {
+        res.status(500).send('Hubo un error al obtener las plantas');
+    }
+};
+
+// POST: Crear una nueva planta
+exports.crearPlanta = async (req, res) => {
+    try {
+        const planta = new Planta(req.body);
+        await planta.save();
+        res.json(planta);
+    } catch (error) {
+        res.status(500).send('Hubo un error al crear la planta');
+    }
+};
+
+// POST: Añadir un registro de riego a una planta
+exports.agregarRiego = async (req, res) => {
+    try {
+        const { cantidad } = req.body;
+        let planta = await Planta.findById(req.params.id);
+        
+        if (!planta) return res.status(404).json({ msg: 'Planta no encontrada' });
+        
+        planta.riegos.push({ cantidad });
+        await planta.save();
+        res.json(planta);
+    } catch (error) {
+        res.status(500).send('Hubo un error al registrar el riego');
+    }
+};
+
+// PUT: Actualizar una planta
+exports.actualizarPlanta = async (req, res) => {
+    try {
+        const { nombre, tipo } = req.body;
+        let planta = await Planta.findById(req.params.id);
+        
+        if (!planta) return res.status(404).json({ msg: 'Planta no encontrada' });
+        
+        planta.nombre = nombre;
+        planta.tipo = tipo;
+        
+        planta = await Planta.findOneAndUpdate({ _id: req.params.id }, planta, { new: true });
+        res.json(planta);
+    } catch (error) {
+        res.status(500).send('Hubo un error al actualizar');
+    }
+};
+
+// DELETE: Eliminar una planta
+exports.eliminarPlanta = async (req, res) => {
+    try {
+        let planta = await Planta.findById(req.params.id);
+        if (!planta) return res.status(404).json({ msg: 'Planta no encontrada' });
+        
+        await Planta.findOneAndDelete({ _id: req.params.id });
+        res.json({ msg: 'Planta eliminada con éxito' });
+    } catch (error) {
+        res.status(500).send('Hubo un error al eliminar');
+    }
+};
